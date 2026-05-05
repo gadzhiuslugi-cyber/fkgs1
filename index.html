@@ -1,0 +1,2388 @@
+<!DOCTYPE html>
+<html lang="ru" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ФКГС — Голосование за благоустройство</title>
+<meta name="description" content="Федеральный проект «Формирование комфортной городской среды» — дашборд голосования, Махачкала 2026">
+<meta name="theme-color" content="#00c9a7">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ФКГС 2026">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230a0f1e'/><text y='68' x='50' text-anchor='middle' font-size='52' font-family='Arial'>🏛</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+// PWA Manifest injected inline
+const manifestData = {
+  name: "ФКГС 2026 — Голосование",
+  short_name: "ФКГС 2026",
+  description: "Дашборд голосования за благоустройство городской среды Махачкалы",
+  start_url: "./",
+  display: "standalone",
+  background_color: "#0a0f1e",
+  theme_color: "#00c9a7",
+  orientation: "any",
+  icons: [
+    { src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%230a0f1e'/><text y='130' x='96' text-anchor='middle' font-size='100' font-family='Arial'>🏛</text></svg>", sizes: "192x192", type: "image/svg+xml" },
+    { src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%230a0f1e'/><text y='350' x='256' text-anchor='middle' font-size='280' font-family='Arial'>🏛</text></svg>", sizes: "512x512", type: "image/svg+xml" }
+  ]
+};
+const blob = new Blob([JSON.stringify(manifestData)], {type:'application/json'});
+const manifestURL = URL.createObjectURL(blob);
+document.addEventListener('DOMContentLoaded', () => {
+  const link = document.createElement('link');
+  link.rel = 'manifest'; link.href = manifestURL;
+  document.head.appendChild(link);
+});
+// Service Worker registration
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE = 'fkgs-v1';
+    self.addEventListener('install', e => {
+      e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./'])));
+      self.skipWaiting();
+    });
+    self.addEventListener('activate', e => { e.waitUntil(self.clients.claim()); });
+    self.addEventListener('fetch', e => {
+      e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      }).catch(() => caches.match('./'))));
+    });
+  `;
+  const swBlob = new Blob([swCode], {type:'application/javascript'});
+  const swURL = URL.createObjectURL(swBlob);
+  window.addEventListener('load', () => navigator.serviceWorker.register(swURL).catch(()=>{}));
+}
+</script>
+<style>
+  :root {
+    --bg: #0a0f1e;
+    --panel: #0d1428;
+    --panel2: #111a35;
+    --accent: #00c9a7;
+    --accent2: #3b82f6;
+    --accent3: #f59e0b;
+    --gold: #fbbf24;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --border: rgba(255,255,255,0.07);
+    --glow: 0 0 20px rgba(0,201,167,0.15);
+    --modal-bg: #131c35;
+    --input-bg: rgba(255,255,255,0.05);
+    --toast-bg: #131c35;
+  }
+
+  /* ===== LIGHT THEME ===== */
+  html.light {
+    --bg: #f0f4f8;
+    --panel: #ffffff;
+    --panel2: #f8fafc;
+    --accent: #009e82;
+    --accent2: #2563eb;
+    --gold: #d97706;
+    --text: #1e293b;
+    --muted: #94a3b8;
+    --border: rgba(0,0,0,0.08);
+    --glow: 0 0 20px rgba(0,158,130,0.12);
+    --modal-bg: #ffffff;
+    --input-bg: rgba(0,0,0,0.04);
+    --toast-bg: #1e293b;
+  }
+  html.light body::before {
+    background:
+      radial-gradient(ellipse 60% 40% at 80% 10%, rgba(37,99,235,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 10% 80%, rgba(0,158,130,0.05) 0%, transparent 60%);
+  }
+  html.light .progress-track { background: rgba(0,0,0,0.07); }
+  html.light .rank-mini-bar { background: rgba(0,0,0,0.07); }
+  html.light .design-bar { background: rgba(0,0,0,0.07); }
+  html.light .search-box { background: var(--input-bg); }
+  html.light .sort-btn { background: var(--input-bg); }
+  html.light .modal { background: var(--modal-bg); box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+  html.light input[type="text"], html.light input[type="number"], html.light textarea { background: var(--input-bg); color: var(--text); }
+  html.light .toast { background: var(--toast-bg); color: #00c9a7; }
+  html.light h1 { background: linear-gradient(135deg, #1e293b 0%, var(--accent) 100%); -webkit-background-clip: text; background-clip: text; }
+  html.light .rank-item { background: var(--panel2); }
+  html.light .rank-item:hover { background: rgba(0,158,130,0.05); }
+  html.light .rank-item.selected { background: rgba(0,158,130,0.1); border-color: var(--accent); }
+  html.light .rank-item.top1 { background: rgba(217,119,6,0.06); border-color: rgba(217,119,6,0.2); }
+  html.light .rank-item.top2 { background: rgba(100,116,139,0.07); }
+  html.light .rank-item.top3 { background: rgba(180,100,40,0.05); }
+  html.light .design-card { background: var(--panel2); }
+  html.light .btn-ghost { color: var(--muted); border-color: var(--border); }
+  html.light .btn-primary { color: #fff; }
+  html.light .action-btn.primary-action { color: #fff; }
+  html.light .sort-btn:hover, html.light .sort-btn.active { background: rgba(0,158,130,0.08); }
+
+
+  /* ===== MAYOR VIEW OVERLAY ===== */
+  .mayor-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+    background: var(--bg);
+    overflow-y: auto;
+    animation: mayorFadeIn 0.35s ease;
+  }
+  @keyframes mayorFadeIn {
+    from { opacity: 0; transform: scale(0.98); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .mayor-overlay.open { display: block; }
+
+  .mayor-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 40px 60px;
+  }
+
+  .mayor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 36px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mayor-title-block {}
+  .mayor-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    font-family: 'Russo One', sans-serif;
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .mayor-h1 {
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(18px, 2.5vw, 28px);
+    font-weight: 400;
+    background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+  }
+  .mayor-date {
+    font-size: 12px;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .mayor-close-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Golos Text', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .mayor-close-btn:hover { border-color: #ef4444; color: #ef4444; }
+
+  /* KPI row in mayor view — bigger */
+  .mayor-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+  @media (max-width: 700px) { .mayor-kpi-grid { grid-template-columns: repeat(2,1fr); } }
+
+  .mayor-kpi-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 28px 26px 24px;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+  }
+  .mayor-kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 18px 18px 0 0;
+  }
+  .mayor-kpi-card.green::before { background: linear-gradient(90deg, var(--accent), transparent); }
+  .mayor-kpi-card.blue::before  { background: linear-gradient(90deg, var(--accent2), transparent); }
+  .mayor-kpi-card.gold::before  { background: linear-gradient(90deg, var(--gold), transparent); }
+  .mayor-kpi-card.orange::before { background: linear-gradient(90deg, #f97316, transparent); }
+  .mayor-kpi-icon { font-size: 32px; margin-bottom: 12px; display: block; }
+  .mayor-kpi-value {
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(32px, 4vw, 52px);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .mayor-kpi-card.green  .mayor-kpi-value { color: var(--accent); }
+  .mayor-kpi-card.blue   .mayor-kpi-value { color: var(--accent2); }
+  .mayor-kpi-card.gold   .mayor-kpi-value { color: var(--gold); }
+  .mayor-kpi-card.orange .mayor-kpi-value { color: #f97316; }
+  .mayor-kpi-label {
+    font-size: 13px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+  .mayor-kpi-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* Progress in mayor view */
+  .mayor-progress {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 24px 28px;
+    margin-bottom: 28px;
+  }
+  .mayor-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .mayor-progress-title { font-size: 16px; font-weight: 700; color: var(--text); }
+  .mayor-progress-pct {
+    font-family: 'Russo One', sans-serif;
+    font-size: 36px;
+    color: var(--accent);
+  }
+  .mayor-progress-track {
+    background: rgba(255,255,255,0.06);
+    border-radius: 99px;
+    height: 16px;
+    overflow: hidden;
+  }
+  html.light .mayor-progress-track { background: rgba(0,0,0,0.07); }
+  .mayor-progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    position: relative;
+    transition: width 1s cubic-bezier(0.4,0,0.2,1);
+  }
+  .mayor-progress-fill::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0; width: 50px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25));
+    border-radius: 99px;
+  }
+  .mayor-progress-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* Bottom 2-col: donut + design */
+  .mayor-bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 700px) { .mayor-bottom-grid { grid-template-columns: 1fr; } }
+
+  .mayor-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 28px;
+  }
+  .mayor-section-title {
+    font-family: 'Russo One', sans-serif;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mayor-section-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px; height: 16px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  /* Donut bigger in mayor */
+  .mayor-donut-wrap {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 20px;
+  }
+  .mayor-donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .mayor-donut-val {
+    font-family: 'Russo One', sans-serif;
+    font-size: 30px;
+    color: var(--text);
+  }
+  .mayor-donut-lbl { font-size: 11px; color: var(--muted); }
+  .mayor-legend { display: flex; flex-direction: column; gap: 12px; }
+  .mayor-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+  }
+  .mayor-legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .mayor-legend-val { font-family: 'Russo One', sans-serif; font-size: 18px; margin-left: auto; }
+
+  /* Design cards in mayor */
+  .mayor-design-card {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 14px;
+  }
+  .mayor-design-card:last-child { margin-bottom: 0; }
+  .mayor-design-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+  .mayor-design-num {
+    font-family: 'Russo One', sans-serif;
+    font-size: 28px;
+    color: var(--accent2);
+    width: 36px;
+    flex-shrink: 0;
+    text-align: center;
+  }
+  .mayor-design-name { font-size: 13px; color: var(--text); line-height: 1.5; }
+  .mayor-design-votes {
+    font-family: 'Russo One', sans-serif;
+    font-size: 28px;
+    color: var(--accent2);
+    margin-bottom: 8px;
+  }
+  .mayor-design-bar {
+    height: 8px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  html.light .mayor-design-bar { background: rgba(0,0,0,0.07); }
+  .mayor-design-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent2), #7c3aed);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Golos Text', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated BG */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 80% 10%, rgba(59,130,246,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 10% 80%, rgba(0,201,167,0.07) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* HEADER */
+  header {
+    padding: 32px 0 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+  .logo-badge {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    font-family: 'Russo One', sans-serif;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+  .header-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  h1 {
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(20px, 3vw, 32px);
+    font-weight: 400;
+    line-height: 1.2;
+    background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .sub-header {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 6px;
+  }
+  .last-update {
+    font-size: 12px;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .dot-live {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.8s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  /* KPI ROW */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin: 28px 0;
+  }
+  .kpi-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--glow); }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .kpi-card.green::before { background: linear-gradient(90deg, var(--accent), transparent); }
+  .kpi-card.blue::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+  .kpi-card.gold::before { background: linear-gradient(90deg, var(--gold), transparent); }
+  .kpi-card.orange::before { background: linear-gradient(90deg, #f97316, transparent); }
+  .kpi-icon {
+    font-size: 22px;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .kpi-value {
+    font-family: 'Russo One', sans-serif;
+    font-size: 30px;
+    font-weight: 400;
+    line-height: 1;
+  }
+  .kpi-card.green .kpi-value { color: var(--accent); }
+  .kpi-card.blue .kpi-value { color: var(--accent2); }
+  .kpi-card.gold .kpi-value { color: var(--gold); }
+  .kpi-card.orange .kpi-value { color: #f97316; }
+  .kpi-label {
+    font-size: 12px;
+    color: #ffffff;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .kpi-sub {
+    font-size: 11px;
+    color: #ffffff;
+    margin-top: 6px;
+  }
+  html.light .kpi-label { color: #000000; }
+  html.light .kpi-sub { color: #000000; }
+
+  /* PROGRESS BAR PLAN */
+  .progress-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 28px;
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .progress-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .progress-pct {
+    font-family: 'Russo One', sans-serif;
+    font-size: 24px;
+    color: var(--accent);
+  }
+  .progress-track {
+    background: rgba(255,255,255,0.06);
+    border-radius: 99px;
+    height: 10px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 1s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+  }
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 40px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
+    border-radius: 99px;
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* MAIN GRID */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+  @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+
+  /* SECTION HEADERS */
+  .section-title {
+    font-family: 'Russo One', sans-serif;
+    font-size: 14px;
+    letter-spacing: 1px;
+    color: var(--text);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 16px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  /* TABLE PANEL */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    overflow: hidden;
+  }
+
+  /* SEARCH + SORT */
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .search-box {
+    flex: 1;
+    min-width: 160px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    color: var(--text);
+    font-family: 'Golos Text', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-box:focus { border-color: var(--accent); }
+  .search-box::placeholder { color: var(--muted); }
+  .sort-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    color: var(--muted);
+    font-family: 'Golos Text', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .sort-btn:hover, .sort-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,201,167,0.08); }
+
+  /* RANKING TABLE */
+  .rank-list { display: flex; flex-direction: column; gap: 6px; max-height: 560px; overflow-y: auto; }
+  .rank-list::-webkit-scrollbar { width: 4px; }
+  .rank-list::-webkit-scrollbar-track { background: transparent; }
+  .rank-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .rank-item {
+    display: grid;
+    grid-template-columns: 36px 1fr 80px 80px;
+    gap: 10px;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: var(--panel2);
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .rank-item:hover { border-color: rgba(0,201,167,0.3); background: rgba(0,201,167,0.04); }
+  .rank-item.selected { border-color: var(--accent); background: rgba(0,201,167,0.08); }
+  .rank-item.top1 { background: rgba(251,191,36,0.06); border-color: rgba(251,191,36,0.2); }
+  .rank-item.top2 { background: rgba(148,163,184,0.06); border-color: rgba(148,163,184,0.15); }
+  .rank-item.top3 { background: rgba(205,127,50,0.05); border-color: rgba(205,127,50,0.15); }
+
+  .rank-num {
+    font-family: 'Russo One', sans-serif;
+    font-size: 15px;
+    text-align: center;
+    color: var(--muted);
+  }
+  .rank-item.top1 .rank-num { color: var(--gold); }
+  .rank-item.top2 .rank-num { color: #94a3b8; }
+  .rank-item.top3 .rank-num { color: #cd7f32; }
+
+  .rank-name {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--text);
+  }
+  .rank-bar-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+  }
+  .rank-votes {
+    font-family: 'Russo One', sans-serif;
+    font-size: 14px;
+    color: var(--accent);
+    text-align: right;
+  }
+  .rank-mini-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .rank-mini-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .rank-pct {
+    font-size: 10px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  /* SIDEBAR */
+  .sidebar { display: flex; flex-direction: column; gap: 18px; }
+
+  /* DONUT CHART */
+  .donut-wrap {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 12px;
+  }
+  .donut-svg { transform: rotate(-90deg); }
+  .donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .donut-center-val {
+    font-family: 'Russo One', sans-serif;
+    font-size: 22px;
+    color: var(--text);
+  }
+  .donut-center-lbl { font-size: 10px; color: var(--muted); }
+
+  .legend-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* DESIGN VARIANTS */
+  .design-card {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    transition: border-color 0.2s;
+  }
+  .design-card:hover { border-color: rgba(59,130,246,0.4); }
+  .design-num {
+    font-family: 'Russo One', sans-serif;
+    font-size: 20px;
+    color: var(--accent2);
+    width: 28px;
+    flex-shrink: 0;
+    text-align: center;
+  }
+  .design-info { flex: 1; min-width: 0; }
+  .design-name { font-size: 11px; color: var(--text); line-height: 1.4; margin-bottom: 6px; }
+  .design-votes {
+    font-family: 'Russo One', sans-serif;
+    font-size: 16px;
+    color: var(--accent2);
+  }
+  .design-bar {
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 99px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+  .design-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent2), #7c3aed);
+  }
+
+  /* EDIT MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--modal-bg);
+    border: 1px solid rgba(0,201,167,0.3);
+    border-radius: 16px;
+    padding: 28px;
+    width: 90%;
+    max-width: 520px;
+    box-shadow: 0 0 60px rgba(0,201,167,0.1);
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal-title {
+    font-family: 'Russo One', sans-serif;
+    font-size: 16px;
+    margin-bottom: 20px;
+    color: var(--accent);
+  }
+  .form-group { margin-bottom: 16px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  input[type="text"], input[type="number"], textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'Golos Text', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+  }
+  input:focus, textarea:focus { border-color: var(--accent); }
+  .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  .btn {
+    padding: 10px 22px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'Golos Text', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .btn-primary { background: var(--accent); color: #0a0f1e; }
+  .btn-primary:hover { background: #00b394; transform: translateY(-1px); }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-ghost:hover { border-color: var(--muted); color: var(--text); }
+  .btn-danger { background: transparent; border: 1px solid rgba(239,68,68,0.4); color: #ef4444; }
+  .btn-danger:hover { background: rgba(239,68,68,0.1); }
+
+  /* ACTIONS BAR */
+  .actions-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+  .action-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Golos Text', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .action-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,201,167,0.06); }
+  .action-btn.primary-action { background: var(--accent); border-color: var(--accent); color: #0a0f1e; }
+  .action-btn.primary-action:hover { background: #00b394; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: var(--toast-bg);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 13px;
+    color: var(--accent);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    z-index: 200;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 0;
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .footer-text { font-size: 11px; color: var(--muted); }
+  .footer-badge {
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ===== MOBILE LAYOUT ===== */
+  @media (max-width: 600px) {
+    .container { padding: 0 14px; padding-bottom: 80px; }
+    header { padding: 16px 0 12px; }
+    .header-label { display: none; }
+    h1 { font-size: 16px; }
+    .sub-header { font-size: 11px; }
+    .logo-badge { font-size: 10px; padding: 4px 9px; }
+
+    .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+    .kpi-card { padding: 14px 14px 12px; border-radius: 12px; }
+    .kpi-value { font-size: 22px; }
+    .kpi-label { font-size: 10px; }
+    .kpi-icon { font-size: 18px; margin-bottom: 6px; }
+    .kpi-sub { display: none; }
+
+    .progress-section { padding: 14px 16px; border-radius: 12px; }
+    .progress-title { font-size: 12px; }
+    .progress-pct { font-size: 18px; }
+    .progress-track { height: 8px; }
+    .progress-meta { font-size: 10px; }
+
+    .main-grid { grid-template-columns: 1fr; gap: 12px; }
+    .panel { padding: 14px; border-radius: 12px; }
+    .section-title { font-size: 11px; margin-bottom: 10px; }
+
+    .actions-bar { gap: 6px; }
+    .action-btn { padding: 7px 10px; font-size: 10px; gap: 4px; }
+
+    .rank-list { max-height: 400px; }
+    .rank-item { grid-template-columns: 28px 1fr 60px; gap: 6px; padding: 10px 10px; }
+    .rank-item .rank-bar-wrap { display: none; }
+    .rank-votes-mobile { font-family: 'Russo One', sans-serif; font-size: 13px; color: var(--accent); text-align: right; }
+    .rank-name { font-size: 11px; }
+    .rank-num { font-size: 13px; }
+
+    .sidebar { gap: 12px; }
+    .donut-wrap { width: 120px; height: 120px; }
+    .donut-center-val { font-size: 17px; }
+
+    footer { display: none; }
+
+    /* Compact controls */
+    .controls { gap: 6px; }
+    .search-box { font-size: 12px; padding: 7px 10px; }
+    .sort-btn { padding: 7px 10px; font-size: 11px; }
+
+    /* Mayor view mobile */
+    .mayor-inner { padding: 16px 16px 80px; }
+    .mayor-kpi-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .mayor-kpi-card { padding: 16px 14px; border-radius: 14px; }
+    .mayor-kpi-value { font-size: 26px; }
+    .mayor-kpi-label { font-size: 10px; }
+    .mayor-kpi-icon { font-size: 22px; }
+    .mayor-bottom-grid { grid-template-columns: 1fr; }
+    .mayor-h1 { font-size: 15px; }
+
+    /* Справка mobile */
+    .spravka-inner { padding: 16px 16px 80px; }
+    .spravka-kpi-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+  }
+
+  /* ===== BOTTOM NAV BAR (mobile) ===== */
+  .bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 250;
+    background: rgba(10,15,30,0.97);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+    height: auto;
+  }
+  html.light .bottom-nav { background: rgba(240,244,248,0.97); }
+  @media (max-width: 600px) { .bottom-nav { display: flex; } }
+
+  .bottom-nav-items {
+    display: flex;
+    width: 100%;
+    justify-content: space-around;
+    align-items: center;
+  }
+  .bnav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 4px 10px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--muted);
+    font-family: 'Golos Text', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .bnav-item.active { color: var(--accent); }
+  .bnav-item:active { transform: scale(0.92); }
+  .bnav-icon { font-size: 20px; line-height: 1; }
+  .bnav-label { font-size: 9px; }
+
+  /* ===== PWA INSTALL BANNER ===== */
+  .pwa-banner {
+    display: none;
+    position: fixed;
+    bottom: 72px;
+    left: 14px; right: 14px;
+    z-index: 260;
+    background: linear-gradient(135deg, #0d1428, #111a35);
+    border: 1px solid rgba(0,201,167,0.35);
+    border-radius: 14px;
+    padding: 14px 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    align-items: center;
+    gap: 12px;
+    animation: slideUp2 0.3s ease;
+  }
+  @keyframes slideUp2 { from { transform: translateY(20px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+  .pwa-banner.show { display: flex; }
+  html.light .pwa-banner { background: #fff; border-color: rgba(0,158,130,0.3); }
+  .pwa-banner-icon { font-size: 28px; flex-shrink: 0; }
+  .pwa-banner-text { flex: 1; }
+  .pwa-banner-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .pwa-banner-sub { font-size: 11px; color: var(--muted); }
+  .pwa-banner-btns { display: flex; gap: 8px; flex-shrink: 0; }
+  .pwa-install-btn {
+    background: var(--accent);
+    border: none; border-radius: 8px;
+    padding: 8px 14px;
+    font-family: 'Golos Text', sans-serif;
+    font-size: 12px; font-weight: 700;
+    color: #0a0f1e; cursor: pointer;
+    white-space: nowrap;
+  }
+  .pwa-dismiss-btn {
+    background: transparent;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px; cursor: pointer; color: var(--muted);
+  }
+  /* Desktop PWA button in header */
+  .pwa-desktop-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Golos Text', sans-serif;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .pwa-desktop-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,201,167,0.06); }
+  .pwa-desktop-btn.hidden { display: none; }
+
+  /* ===== СПРАВКА / SUMMARY REPORT ===== */
+  .spravka-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 450;
+    background: var(--bg);
+    overflow-y: auto;
+    animation: mayorFadeIn 0.3s ease;
+  }
+  .spravka-overlay.open { display: block; }
+
+  .spravka-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 40px 60px;
+  }
+
+  /* Print styles */
+  @media print {
+    .spravka-overlay { position: static; display: block !important; background: #fff; }
+    .spravka-no-print { display: none !important; }
+    .spravka-inner { padding: 20px; max-width: 100%; }
+    body > *:not(.spravka-overlay) { display: none !important; }
+    .spravka-overlay { animation: none; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+
+  .spravka-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 18px;
+    border-bottom: 2px solid var(--accent);
+    gap: 16px;
+  }
+  .spravka-org { font-size: 11px; color: var(--muted); line-height: 1.6; }
+  .spravka-title-block { flex: 1; text-align: center; padding: 0 20px; }
+  .spravka-title-label {
+    font-size: 11px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 2px; margin-bottom: 6px;
+  }
+  .spravka-title-main {
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(14px, 2vw, 20px);
+    background: linear-gradient(135deg, var(--text), var(--accent));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.3; margin-bottom: 4px;
+  }
+  .spravka-title-sub { font-size: 12px; color: var(--muted); }
+  .spravka-date-block { font-size: 11px; color: var(--muted); text-align: right; line-height: 1.6; white-space: nowrap; }
+
+  .spravka-section { margin-bottom: 24px; }
+  .spravka-section-title {
+    font-family: 'Russo One', sans-serif;
+    font-size: 12px; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--accent);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .spravka-section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .spravka-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .spravka-kpi {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+  .spravka-kpi-val {
+    font-family: 'Russo One', sans-serif;
+    font-size: 24px; line-height: 1; margin-bottom: 4px;
+  }
+  .spravka-kpi-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .spravka-kpi.green .spravka-kpi-val { color: var(--accent); }
+  .spravka-kpi.blue  .spravka-kpi-val { color: var(--accent2); }
+  .spravka-kpi.gold  .spravka-kpi-val { color: var(--gold); }
+  .spravka-kpi.orange .spravka-kpi-val { color: #f97316; }
+
+  .spravka-progress-bar {
+    background: rgba(255,255,255,0.06);
+    border-radius: 99px; height: 12px; overflow: hidden; margin: 10px 0 4px;
+  }
+  html.light .spravka-progress-bar { background: rgba(0,0,0,0.07); }
+  .spravka-progress-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .spravka-progress-meta {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--muted);
+  }
+
+  /* Top 10 table */
+  .spravka-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .spravka-table th {
+    text-align: left; padding: 8px 10px;
+    font-size: 10px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+  }
+  .spravka-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    color: var(--text); vertical-align: middle;
+  }
+  html.light .spravka-table td { border-bottom-color: rgba(0,0,0,0.04); }
+  .spravka-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .spravka-table .medal { font-size: 14px; }
+  .spravka-table .votes-val { font-family: 'Russo One', sans-serif; color: var(--accent); }
+  .spravka-table .bar-cell { width: 100px; }
+  .spravka-mini-bar {
+    height: 5px; background: rgba(255,255,255,0.06);
+    border-radius: 99px; overflow: hidden;
+  }
+  html.light .spravka-mini-bar { background: rgba(0,0,0,0.07); }
+  .spravka-mini-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+
+  /* Design summary */
+  .spravka-design-row {
+    display: flex; gap: 12px;
+  }
+  .spravka-design-item {
+    flex: 1; background: var(--panel);
+    border: 1px solid var(--border); border-radius: 10px; padding: 14px;
+  }
+  .spravka-design-num { font-size: 10px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; }
+  .spravka-design-name { font-size: 11px; color: var(--text); margin-bottom: 8px; line-height: 1.4; }
+  .spravka-design-votes { font-family: 'Russo One', sans-serif; font-size: 20px; margin-bottom: 6px; color: var(--accent2); }
+  .spravka-design-bar2 { height: 5px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; }
+  html.light .spravka-design-bar2 { background: rgba(0,0,0,0.07); }
+  .spravka-design-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent2), #7c3aed); }
+
+  /* Summary text block */
+  .spravka-summary-block {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 16px 20px;
+    font-size: 13px; line-height: 1.7;
+    color: var(--text);
+  }
+  .spravka-summary-block p { margin-bottom: 8px; }
+  .spravka-summary-block p:last-child { margin-bottom: 0; }
+  .spravka-highlight { color: var(--accent); font-weight: 700; }
+
+  /* Signature line */
+  .spravka-footer-line {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-top: 28px; padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--muted); flex-wrap: wrap; gap: 12px;
+  }
+  .spravka-sign { text-align: center; }
+  .spravka-sign-line { border-top: 1px solid var(--muted); width: 180px; margin: 20px auto 4px; }
+  .spravka-close-row {
+    display: flex; gap: 10px; margin-bottom: 20px;
+    justify-content: flex-end;
+  }
+  /* ===== SETTINGS MODAL ===== */
+  .settings-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+  }
+  .settings-overlay.open { display: flex; }
+  .settings-modal {
+    background: var(--modal-bg);
+    border: 1px solid rgba(0,201,167,0.25);
+    border-radius: 18px;
+    padding: 28px 32px;
+    width: 90%;
+    max-width: 480px;
+    box-shadow: 0 0 60px rgba(0,201,167,0.08);
+    animation: slideUp 0.25s ease;
+  }
+  .settings-title {
+    font-family: 'Russo One', sans-serif;
+    font-size: 16px;
+    color: var(--accent);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .settings-section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    margin-top: 20px;
+  }
+  .settings-section-label:first-of-type { margin-top: 0; }
+  .settings-input-wrap { position: relative; }
+  .settings-input {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'Golos Text', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .settings-input:focus { border-color: var(--accent); }
+  .settings-input::placeholder { color: var(--muted); }
+  .settings-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    min-height: 36px;
+  }
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--muted);
+  }
+  .status-dot.connected { background: var(--accent); box-shadow: 0 0 6px var(--accent); animation: pulse 1.8s infinite; }
+  .status-dot.error { background: #ef4444; }
+  .status-dot.loading { background: var(--gold); animation: pulse 0.8s infinite; }
+  .settings-row { display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; }
+  .settings-save-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 24px;
+    color: #0a0f1e;
+    font-family: 'Golos Text', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .settings-save-btn:hover { background: #00b394; transform: translateY(-1px); }
+  .settings-cancel-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 20px;
+    color: var(--muted);
+    font-family: 'Golos Text', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .settings-cancel-btn:hover { border-color: var(--muted); color: var(--text); }
+  .settings-sync-btn {
+    background: transparent;
+    border: 1px solid rgba(59,130,246,0.4);
+    border-radius: 8px;
+    padding: 8px 16px;
+    color: var(--accent2);
+    font-family: 'Golos Text', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 10px;
+    width: 100%;
+  }
+  .settings-sync-btn:hover { background: rgba(59,130,246,0.1); }
+  .settings-sync-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .settings-info { font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.6; }
+  .settings-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+</style>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-top">
+      <span class="logo-badge">ФКГС 2026</span>
+      <span class="header-label">Национальный проект «Инфраструктура для жизни»</span>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <button onclick="toggleTheme()" id="themeBtn" title="Сменить тему" style="background:transparent;border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px;line-height:1;transition:all 0.2s;color:var(--muted)">🌙</button>
+        <button onclick="openSettings()" title="Настройки" style="background:transparent;border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px;line-height:1;transition:all 0.2s;color:var(--muted)" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">⚙️</button>
+        <button id="pwaDesktopBtn" onclick="triggerPwaInstall()" class="pwa-desktop-btn hidden" title="Добавить на рабочий стол">📲 Установить</button>
+      </div>
+    </div>
+    <h1>Федеральный проект «Формирование комфортной городской среды»</h1>
+    <p class="sub-header">Благоустроенные пространства — драйверы новой городской экономики и важный фактор народосбережения</p>
+    <div class="last-update">
+      <span class="dot-live"></span>
+      <span id="updateTime">Данные на 09:00 · Махачкала</span>
+    </div>
+  </header>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-grid">
+    <div class="kpi-card green">
+      <span class="kpi-icon">🗳️</span>
+      <div class="kpi-value" id="kpiTotal">17 484</div>
+      <div class="kpi-label">Всего голосов</div>
+      <div class="kpi-sub">на платформе голосования</div>
+    </div>
+    <div class="kpi-card blue">
+      <span class="kpi-icon">🏗️</span>
+      <div class="kpi-value" id="kpiObjects">8 041</div>
+      <div class="kpi-label">За благоустройство</div>
+      <div class="kpi-sub" id="kpiObjectsSub">40 объектов участвуют</div>
+    </div>
+    <div class="kpi-card gold">
+      <span class="kpi-icon">🎨</span>
+      <div class="kpi-value" id="kpiDesign">9 443</div>
+      <div class="kpi-label">За дизайн-проекты</div>
+      <div class="kpi-sub">2 варианта дизайна</div>
+    </div>
+    <div class="kpi-card orange">
+      <span class="kpi-icon">📊</span>
+      <div class="kpi-value" id="kpiPlan">17.2%</div>
+      <div class="kpi-label">Выполнение плана</div>
+      <div class="kpi-sub">план — 101 475 голосов</div>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-section">
+    <div class="progress-header">
+      <div>
+        <div class="progress-title">Выполнение плана голосования</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">Собрано: <span id="progressCollected">17 484</span> из <span id="progressPlan">101 475</span></div>
+      </div>
+      <div class="progress-pct" id="progressPct">17.2%</div>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width: 17.2%"></div>
+    </div>
+    <div class="progress-meta">
+      <span>0</span>
+      <span>25%</span>
+      <span>50%</span>
+      <span>75%</span>
+      <span>100% = 101 475</span>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <!-- LEFT: TABLE -->
+    <div class="panel">
+      <div class="section-title">Рейтинг объектов благоустройства</div>
+
+      <div class="actions-bar">
+        <button class="action-btn" onclick="openEditSelected()" id="editBtn" style="opacity:0.4;pointer-events:none">✏️ Редактировать</button>
+        <button class="action-btn" onclick="deleteSelected()" id="deleteBtn" style="opacity:0.4;pointer-events:none;border-color:rgba(239,68,68,0.4);color:#ef4444">🗑 Удалить</button>
+        <label class="action-btn" style="cursor:pointer" title="Загрузить Excel (.xlsx)">
+          📥 Загрузить Excel
+          <input type="file" accept=".xlsx" onchange="importExcel(event)" style="display:none">
+        </label>
+      </div>
+
+      <div class="controls">
+        <input class="search-box" type="text" placeholder="🔍 Поиск по названию..." oninput="filterList(this.value)" id="searchInput">
+        <button class="sort-btn active" id="sortVotes" onclick="toggleVotesSort()">По голосам <span id="sortArrow">↓</span></button>
+      </div>
+
+      <div class="rank-list" id="rankList"></div>
+    </div>
+
+    <!-- RIGHT: SIDEBAR -->
+    <div class="sidebar">
+
+      <!-- DONUT -->
+      <div class="panel">
+        <div class="section-title">Распределение голосов</div>
+        <div class="donut-wrap">
+          <svg class="donut-svg" viewBox="0 0 120 120" width="150" height="150">
+            <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="14"/>
+            <circle id="donutBlue" cx="60" cy="60" r="50" fill="none" stroke="#3b82f6" stroke-width="14"
+              stroke-dasharray="314" stroke-dashoffset="0" stroke-linecap="round"/>
+            <circle id="donutGreen" cx="60" cy="60" r="50" fill="none" stroke="#00c9a7" stroke-width="14"
+              stroke-dasharray="314" stroke-dashoffset="0" stroke-linecap="round"/>
+          </svg>
+          <div class="donut-center">
+            <div class="donut-center-val" id="donutTotal">17 484</div>
+            <div class="donut-center-lbl">всего</div>
+          </div>
+        </div>
+        <div class="legend-list">
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#00c9a7"></div>
+            <div style="flex:1">Благоустройство</div>
+            <div style="font-weight:600;color:#00c9a7" id="lgObj">8 041</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#3b82f6"></div>
+            <div style="flex:1">Дизайн-проекты</div>
+            <div style="font-weight:600;color:#3b82f6" id="lgDes">9 443</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DESIGN VARIANTS -->
+      <div class="panel">
+        <div class="section-title">Голосование за дизайн</div>
+        <div style="display:flex;flex-direction:column;gap:10px" id="designList"></div>
+      </div>
+
+      <!-- TOP-3 -->
+      <div class="panel">
+        <div class="section-title">Топ-3 лидера</div>
+        <div id="top3List" style="display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-text">Начальник Управления информационных технологий — Г.Ш. Магомедов</div>
+    <div class="footer-badge">🏛 Национальный проект «Инфраструктура для жизни»</div>
+  </footer>
+</div>
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav" id="bottomNav">
+  <div class="bottom-nav-items">
+    <button class="bnav-item active" id="bnavDash" onclick="mobileTab('dash')">
+      <span class="bnav-icon">📊</span>
+      <span class="bnav-label">Дашборд</span>
+    </button>
+    <button class="bnav-item" id="bnavRating" onclick="mobileTab('rating')">
+      <span class="bnav-icon">🏆</span>
+      <span class="bnav-label">Рейтинг</span>
+    </button>
+  </div>
+</nav>
+
+<!-- PWA INSTALL BANNER -->
+<div class="pwa-banner" id="pwaBanner">
+  <div class="pwa-banner-icon">📲</div>
+  <div class="pwa-banner-text">
+    <div class="pwa-banner-title">Добавить на рабочий стол</div>
+    <div class="pwa-banner-sub">Открывать как приложение без браузера</div>
+  </div>
+  <div class="pwa-banner-btns">
+    <button class="pwa-install-btn" onclick="triggerPwaInstall()">Установить</button>
+    <button class="pwa-dismiss-btn" onclick="dismissPwa()">✕</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Добавить объект</div>
+    <div class="form-group">
+      <label>Номер объекта</label>
+      <input type="number" id="fieldNum" placeholder="например: 41">
+    </div>
+    <div class="form-group">
+      <label>Наименование территории</label>
+      <textarea id="fieldName" rows="3" placeholder="Благоустройство общественной территории..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Количество голосов</label>
+      <input type="number" id="fieldVotes" placeholder="0">
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveModal()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ===== DATA =====
+let data = [
+  {id:1,  num:1,  name:"Благоустройство общественной территории прилегающей к многоквартирному дому по адресу: Имама Шамиля 4б", votes:3884},
+  {id:2,  num:2,  name:"Благоустройство территории в пос. Шамхал-Термен, МКР «Загородный»", votes:1523},
+  {id:3,  num:3,  name:"Благоустройство общественной территории прилегающей к многоквартирным домам по пр. Насрутдинова 22; 22ж;22а", votes:1398},
+  {id:4,  num:4,  name:"Благоустройство территории возле озера Ак-гель по улице Эльзы Ибрагимовой", votes:915},
+  {id:5,  num:5,  name:"Благоустройство общественной территории прилегающей к многоквартирному дому по улице Айвазовского дом 6", votes:714},
+  {id:6,  num:6,  name:"Благоустроить общественную территорию прилегающей к многоквартирному дому по ул. Ломоносова 17", votes:664},
+  {id:7,  num:7,  name:"Благоустройство общественной территории прилегающей к многоквартирному дому по пр. Имама Шамиля 20", votes:433},
+  {id:8,  num:8,  name:"Благоустройство общественной территории прилегающей к многоквартирным домам 11 и 11А по улице Азиза-Алиева", votes:407},
+  {id:9,  num:9,  name:"Благоустройство общественной территории прилегающей к многоквартирным домам по проспекту Имама Шамиля 19 до 29 в сторону «Сквера дружбы»", votes:377},
+  {id:10, num:10, name:"Благоустройство общественной территории прилегающей к многоквартирному дому улица Абдулхакима Исмаилова, 80", votes:374},
+  {id:11, num:11, name:"Благоустройство общественной территории, прилегающей к многоквартирным домам №93А, 93Б по ул. Хизроева", votes:347},
+  {id:12, num:12, name:"Благоустройство общественной территории по ул. Булача от дома №8 до кольца «Атака»", votes:317},
+  {id:13, num:13, name:"Благоустройство общественной территории прилегающей к многоквартирному дому по пр. Имама Шамиля, 24", votes:314},
+  {id:14, num:14, name:"Благоустройство общественной территории прилегающей к многоквартирным домам пр.И.Шамиля 68б, 68, ул.Ярыгина 6", votes:313},
+  {id:15, num:15, name:"Благоустройство общественной территории набережной в районе Б/З «Хазар» и районе «Лунного берега»", votes:313},
+  {id:16, num:16, name:"Благоустройство общественной территории прилегающей к многоквартирному дому по проспекту Р. Гамзатова 64", votes:266},
+  {id:17, num:17, name:"Благоустройство общественной территории прилегающей к многоквартирному дому по адресу улица Ломоносова 13", votes:191},
+  {id:18, num:18, name:"Благоустройство общественной территории прилегающей к многоквартирному дому по пр. Амет-Хана Султана 8 «б»", votes:180},
+  {id:19, num:19, name:"Благоустройство общественной территории прилегающую к многоквартирному дому по адресу ул. Ташкентская, 15", votes:175},
+  {id:20, num:20, name:"Благоустройство общественной территории прилегающей к многоквартирным домам по ул. Аскерханова, 4, Азиза Алиева, 3, 5", votes:161},
+  {id:21, num:21, name:"Благоустройство общественной территории в МКР «Авиагрегат-3» по ул. 2-ая Агрегатная, возле дома №20", votes:161},
+  {id:22, num:22, name:"Благоустройство общественной территории прилегающей к многоквартирному дому по пр. Имама Шамиля, 44", votes:151},
+  {id:23, num:23, name:"Благоустройство общественной территории по пр. И.Шамиля 87 «б»", votes:150},
+  {id:24, num:24, name:"Благоустройство общественной территории прилегающей к многоквартирному дому по ул. Радужная, 10 «а», 10 «б», 10 «д»", votes:138},
+  {id:25, num:25, name:"Благоустройство общественной территории прилегающей к многоквартирному дому по улице Ю.Акаева, 23", votes:137},
+  {id:26, num:26, name:"Благоустройство общественной территории прилегающей к многоквартирному дому по улице Абубакарова 108к1", votes:130},
+  {id:27, num:27, name:"Благоустройство общественной территории прилегающей к многоквартирному дому по ул. Аскерханова, 6, 6 «А»", votes:93},
+  {id:28, num:28, name:"Благоустройство общественной территории по адресу ул. Каримова, 4 (сзади МКД)", votes:92},
+  {id:29, num:29, name:"Благоустройство общественной территории прилегающей к многоквартирному дому по пр. А.Акушинского, 25 (39)", votes:91},
+  {id:30, num:30, name:"Благоустройство общественной территории прилегающей к многоквартирным домам по ул. Братьев Нурбагандовых 6 «б», 8, 8 «а», 8 «б»", votes:75},
+  {id:31, num:31, name:"Благоустройство общественной территории по ул. Гайдара Гаджиева №23", votes:72},
+  {id:32, num:32, name:"Благоустройство общественной территории прилегающей к многоквартирному дому по пр. Имама Шамиля, 18", votes:70},
+  {id:33, num:33, name:"Благоустройство общественной территории прилегающей к многоквартирному дому по ул. Стояна Джорова, 1", votes:67},
+  {id:34, num:34, name:"Благоустройство общественной территории по улице И. Казака, 48 «б»", votes:64},
+  {id:35, num:35, name:"Благоустройство общественной территории прилегающей к МКД по ул. Шамсулы Алиева, 7 «б» (стар. адрес Аскерханова, 1 «а»)", votes:51},
+  {id:36, num:36, name:"Общественная территория прилегающая к многоквартирному дому по ул. И.Казака 3, 5, 7 (ул. И.Казака 11 «а», 13 «а», 13 «б», 13 «в»)", votes:47},
+  {id:37, num:37, name:"Благоустройство общественной территории прилегающей к многоквартирному дому по ул. Коркмасова, 10, 10 «а», 12", votes:46},
+  {id:38, num:38, name:"Благоустройство общественной территории прилегающей к многоквартирному дому по ул. Лаптиева, 75", votes:45},
+  {id:39, num:39, name:"Благоустройство общественной территории прилегающей к многоквартирному дому по ул. Коркмасова, 7, 9", votes:40},
+];
+
+let designData = [
+  {num:1, name:"Благоустройство сквера в пос. Семендер, в районе домов 106-110 по пр. Казбекова", votes:10067},
+  {num:2, name:"Благоустройство сквера по ул. Абдулхамида Юсупова в районе многоквартирного дома №29 (Хуршилова, 9)", votes:9691},
+];
+
+const PLAN = 101475;
+let currentSort = 'votes';
+let votesAsc = false; // false = убывание (по умолчанию), true = возрастание
+let selectedId = null;
+let editingId = null;
+let nextId = 200;
+
+// ===== COMPUTE =====
+function computeStats() {
+  const objVotes = data.reduce((s, d) => s + d.votes, 0);
+  const desVotes = designData.reduce((s, d) => s + d.votes, 0);
+  const total = objVotes + desVotes;
+  return { objVotes, desVotes, total };
+}
+
+// ===== RENDER =====
+function render() {
+  renderList();
+  renderKPI();
+  renderDonut();
+  renderDesign();
+  renderTop3();
+}
+
+function renderKPI() {
+  const { objVotes, desVotes, total } = computeStats();
+  const pct = (total / PLAN * 100).toFixed(1);
+  document.getElementById('kpiTotal').textContent = total.toLocaleString('ru');
+  document.getElementById('kpiObjects').textContent = objVotes.toLocaleString('ru');
+  document.getElementById('kpiObjectsSub').textContent = `${data.length} объектов участвуют`;
+  document.getElementById('kpiDesign').textContent = desVotes.toLocaleString('ru');
+  document.getElementById('kpiPlan').textContent = pct + '%';
+  document.getElementById('progressCollected').textContent = total.toLocaleString('ru');
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('progressFill').style.width = Math.min(pct, 100) + '%';
+  document.getElementById('updateTime').textContent = window._dataLabel || 'Данные на 09:00 · Махачкала';
+}
+
+function getFilteredSorted() {
+  const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  let arr = data.filter(d => d.name.toLowerCase().includes(q) || String(d.num).includes(q));
+  if (currentSort === 'votes') arr.sort((a,b) => votesAsc ? a.votes - b.votes : b.votes - a.votes);
+  else arr.sort((a,b) => a.num - b.num);
+  return arr;
+}
+
+function renderList() {
+  const arr = getFilteredSorted();
+  const maxVotes = Math.max(...data.map(d => d.votes));
+  const list = document.getElementById('rankList');
+  const rankMap = {};
+  [...data].sort((a,b)=>b.votes-a.votes).forEach((d,i) => rankMap[d.id] = i+1);
+  const { objVotes } = computeStats();
+
+  list.innerHTML = arr.map(item => {
+    const rank = rankMap[item.id];
+    const topClass = rank === 1 ? 'top1' : rank === 2 ? 'top2' : rank === 3 ? 'top3' : '';
+    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+    const pct = objVotes > 0 ? (item.votes / objVotes * 100).toFixed(1) : 0;
+    const barW = (item.votes / maxVotes * 100).toFixed(1);
+    const sel = selectedId === item.id ? 'selected' : '';
+    return `<div class="rank-item ${topClass} ${sel}" onclick="selectItem(${item.id})">
+      <div class="rank-num">${medal}</div>
+      <div class="rank-name">№${item.num} · ${item.name}</div>
+      <div class="rank-bar-wrap">
+        <div class="rank-votes">${item.votes.toLocaleString('ru')}</div>
+        <div class="rank-mini-bar"><div class="rank-mini-fill" style="width:${barW}%"></div></div>
+        <div class="rank-pct">${pct}%</div>
+      </div>
+      <div class="rank-votes-mobile">${item.votes.toLocaleString('ru')}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderDonut() {
+  const { objVotes, desVotes, total } = computeStats();
+  const circ = 314;
+  const desPct = total > 0 ? desVotes / total : 0;
+  const objPct = total > 0 ? objVotes / total : 0;
+  const desLen = desPct * circ;
+  const objLen = objPct * circ;
+  // blue = design, offset starts at 0
+  document.getElementById('donutBlue').setAttribute('stroke-dasharray', `${desLen} ${circ - desLen}`);
+  document.getElementById('donutBlue').setAttribute('stroke-dashoffset', '0');
+  // green = obj, offset = desLen
+  document.getElementById('donutGreen').setAttribute('stroke-dasharray', `${objLen} ${circ - objLen}`);
+  document.getElementById('donutGreen').setAttribute('stroke-dashoffset', -desLen);
+  document.getElementById('donutTotal').textContent = total.toLocaleString('ru');
+  document.getElementById('lgObj').textContent = objVotes.toLocaleString('ru');
+  document.getElementById('lgDes').textContent = desVotes.toLocaleString('ru');
+}
+
+function renderDesign() {
+  const maxD = Math.max(...designData.map(d => d.votes));
+  const total = designData.reduce((s,d)=>s+d.votes,0);
+  document.getElementById('designList').innerHTML = designData.map(d => {
+    const pct = total > 0 ? (d.votes/total*100).toFixed(1) : 0;
+    return `<div class="design-card">
+      <div class="design-num">${d.num}</div>
+      <div class="design-info">
+        <div class="design-name">${d.name}</div>
+        <div class="design-votes">${d.votes.toLocaleString('ru')}</div>
+        <div class="design-bar"><div class="design-bar-fill" style="width:${(d.votes/maxD*100).toFixed(1)}%"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTop3() {
+  const top = [...data].sort((a,b)=>b.votes-a.votes).slice(0,3);
+  const medals = ['🥇','🥈','🥉'];
+  const colors = ['var(--gold)','#94a3b8','#cd7f32'];
+  document.getElementById('top3List').innerHTML = top.map((d,i) => `
+    <div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:var(--panel2);border-radius:8px;">
+      <div style="font-size:22px;flex-shrink:0">${medals[i]}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;color:var(--text);line-height:1.4;margin-bottom:4px">№${d.num} · ${d.name}</div>
+        <div style="font-family:'Russo One',sans-serif;font-size:16px;color:${colors[i]}">${d.votes.toLocaleString('ru')} голосов</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ===== INTERACTIONS =====
+function selectItem(id) {
+  selectedId = selectedId === id ? null : id;
+  const editBtn = document.getElementById('editBtn');
+  const delBtn = document.getElementById('deleteBtn');
+  if (selectedId) {
+    editBtn.style.opacity = '1'; editBtn.style.pointerEvents = 'auto';
+    delBtn.style.opacity = '1'; delBtn.style.pointerEvents = 'auto';
+  } else {
+    editBtn.style.opacity = '0.4'; editBtn.style.pointerEvents = 'none';
+    delBtn.style.opacity = '0.4'; delBtn.style.pointerEvents = 'none';
+  }
+  renderList();
+}
+
+function filterList(q) { renderList(); }
+
+function toggleVotesSort() {
+  currentSort = 'votes';
+  votesAsc = !votesAsc;
+  document.getElementById('sortArrow').textContent = votesAsc ? '↑' : '↓';
+  document.getElementById('sortVotes').classList.add('active');
+  renderList();
+}
+
+// ===== MODAL =====
+function openAddModal() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = '+ Добавить объект';
+  document.getElementById('fieldNum').value = '';
+  document.getElementById('fieldName').value = '';
+  document.getElementById('fieldVotes').value = '';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function openEditSelected() {
+  if (!selectedId) return;
+  const item = data.find(d => d.id === selectedId);
+  if (!item) return;
+  editingId = selectedId;
+  document.getElementById('modalTitle').textContent = '✏️ Редактировать объект';
+  document.getElementById('fieldNum').value = item.num;
+  document.getElementById('fieldName').value = item.name;
+  document.getElementById('fieldVotes').value = item.votes;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  editingId = null;
+}
+
+function saveModal() {
+  const num = parseInt(document.getElementById('fieldNum').value) || 0;
+  const name = document.getElementById('fieldName').value.trim();
+  const votes = parseInt(document.getElementById('fieldVotes').value) || 0;
+  if (!name) { showToast('⚠️ Введите наименование'); return; }
+
+  if (editingId) {
+    const idx = data.findIndex(d => d.id === editingId);
+    if (idx !== -1) { data[idx] = { ...data[idx], num, name, votes }; }
+    showToast('✅ Объект обновлён');
+  } else {
+    data.push({ id: nextId++, num, name, votes });
+    showToast('✅ Объект добавлен');
+  }
+  closeModal();
+  selectedId = null;
+  render();
+}
+
+function deleteSelected() {
+  if (!selectedId) return;
+  if (!confirm('Удалить выбранный объект?')) return;
+  data = data.filter(d => d.id !== selectedId);
+  selectedId = null;
+  document.getElementById('editBtn').style.opacity = '0.4';
+  document.getElementById('editBtn').style.pointerEvents = 'none';
+  document.getElementById('deleteBtn').style.opacity = '0.4';
+  document.getElementById('deleteBtn').style.pointerEvents = 'none';
+  showToast('🗑 Объект удалён');
+  render();
+}
+
+function exportCSV() {
+  const rows = [['№', 'Наименование', 'Голосов']];
+  [...data].sort((a,b)=>b.votes-a.votes).forEach((d,i) => rows.push([d.num, d.name, d.votes]));
+  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'ФКГС_голосование.csv'; a.click();
+  showToast('📤 CSV экспортирован');
+}
+
+// ===== IMPORT EXCEL =====
+function importExcel(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      // Попытаться извлечь дату/время из строки «Итого голосов на ...»
+      for (let i = 0; i < Math.min(5, rows.length); i++) {
+        const cell = String(rows[i][0] || '');
+        const m = cell.match(/итого голосов на\s+(.+?):/i);
+        if (m) { window._dataLabel = `Данные на ${m[1].trim()} · Махачкала`; break; }
+      }
+
+      // Найти ВСЕ строки-заголовки с «№» (их может быть две: объекты + дизайн)
+      const headerIdxs = [];
+      for (let i = 0; i < rows.length; i++) {
+        if (String(rows[i][0]).trim() === '№') headerIdxs.push(i);
+      }
+
+      // ---- Секция 1: объекты благоустройства (первый заголовок №) ----
+      let importedObj = [];
+      if (headerIdxs.length >= 1) {
+        const start = headerIdxs[0] + 1;
+        const end   = headerIdxs.length >= 2 ? headerIdxs[1] : rows.length;
+        for (let i = start; i < end; i++) {
+          const r = rows[i];
+          const num   = parseInt(r[0]);
+          const name  = String(r[1] || '').trim();
+          const votes = parseInt(r[2]);
+          if (!isNaN(num) && num > 0 && name && !isNaN(votes)) {
+            importedObj.push({ id: nextId++, num, name, votes });
+          }
+        }
+        // Полностью заменяем список объектов данными из файла
+        if (importedObj.length > 0) {
+          data = importedObj;
+        }
+      }
+
+      // ---- Секция 2: дизайн-проекты (второй заголовок №) ----
+      let importedDes = [];
+      if (headerIdxs.length >= 2) {
+        const start = headerIdxs[1] + 1;
+        for (let i = start; i < rows.length; i++) {
+          const r = rows[i];
+          const num   = parseInt(r[0]);
+          // Убираем префикс «Вариант дизайна» если есть
+          const name  = String(r[1] || '').trim().replace(/^Вариант\s+дизайна\s*/i, '');
+          const votes = parseInt(r[2]);
+          if (!isNaN(num) && num > 0 && name && !isNaN(votes)) {
+            importedDes.push({ num, name, votes });
+          }
+        }
+        // Полностью заменяем дизайн-данные
+        if (importedDes.length > 0) {
+          designData = importedDes;
+        }
+      }
+
+      if (importedObj.length === 0 && importedDes.length === 0) {
+        showToast('⚠️ Не удалось распознать данные в файле'); return;
+      }
+
+      selectedId = null;
+      render();
+
+      const parts = [];
+      if (importedObj.length) parts.push(`${importedObj.length} объектов`);
+      if (importedDes.length) parts.push(`${importedDes.length} дизайн-варианта`);
+      showToast(`✅ Загружено: ${parts.join(' + ')}`);
+    } catch(err) {
+      showToast('❌ Ошибка чтения файла: ' + err.message);
+    }
+    event.target.value = '';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Click outside modal to close
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+});
+
+// ===== THEME =====
+function toggleTheme() {
+  const html = document.getElementById('htmlRoot');
+  const btn = document.getElementById('themeBtn');
+  if (html.classList.contains('light')) {
+    html.classList.remove('light');
+    btn.textContent = '🌙';
+    localStorage.setItem('fkgs_theme', 'dark');
+    showToast('🌙 Тёмная тема');
+  } else {
+    html.classList.add('light');
+    btn.textContent = '☀️';
+    localStorage.setItem('fkgs_theme', 'light');
+    showToast('☀️ Светлая тема');
+  }
+}
+
+// ===== MAYOR VIEW =====
+function openMayorView() {
+  const { objVotes, desVotes, total } = computeStats();
+  const pct = (total / PLAN * 100).toFixed(1);
+
+  // Дата
+  const dateEl = document.getElementById('mayorDate');
+  if (dateEl) dateEl.textContent = window._dataLabel || 'Данные на 09:00 · Махачкала';
+
+  // KPI
+  document.getElementById('mKpiTotal').textContent = total.toLocaleString('ru');
+  document.getElementById('mKpiObj').textContent = objVotes.toLocaleString('ru');
+  document.getElementById('mKpiObjSub').textContent = `${data.length} объектов участвуют`;
+  document.getElementById('mKpiDes').textContent = desVotes.toLocaleString('ru');
+  document.getElementById('mKpiPlan').textContent = pct + '%';
+
+  // Progress
+  document.getElementById('mProgCollected').textContent = total.toLocaleString('ru');
+  document.getElementById('mProgPct').textContent = pct + '%';
+  document.getElementById('mProgFill').style.width = Math.min(pct, 100) + '%';
+
+  // Donut
+  const circ = 314;
+  const desLen = total > 0 ? (desVotes / total) * circ : 0;
+  const objLen = total > 0 ? (objVotes / total) * circ : 0;
+  document.getElementById('mDonutBlue').setAttribute('stroke-dasharray', `${desLen} ${circ - desLen}`);
+  document.getElementById('mDonutBlue').setAttribute('stroke-dashoffset', '0');
+  document.getElementById('mDonutGreen').setAttribute('stroke-dasharray', `${objLen} ${circ - objLen}`);
+  document.getElementById('mDonutGreen').setAttribute('stroke-dashoffset', -desLen);
+  document.getElementById('mDonutTotal').textContent = total.toLocaleString('ru');
+  document.getElementById('mLgObj').textContent = objVotes.toLocaleString('ru');
+  document.getElementById('mLgDes').textContent = desVotes.toLocaleString('ru');
+
+  // Design list
+  const maxD = Math.max(...designData.map(d => d.votes));
+  document.getElementById('mDesignList').innerHTML = designData.map(d => `
+    <div class="mayor-design-card">
+      <div class="mayor-design-row">
+        <div class="mayor-design-num">${d.num}</div>
+        <div class="mayor-design-name">${d.name}</div>
+      </div>
+      <div class="mayor-design-votes">${d.votes.toLocaleString('ru')} голосов</div>
+      <div class="mayor-design-bar"><div class="mayor-design-bar-fill" style="width:${(d.votes/maxD*100).toFixed(1)}%"></div></div>
+    </div>
+  `).join('');
+
+  document.getElementById('mayorOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMayorView() {
+  document.getElementById('mayorOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+
+// Restore saved theme
+(function() {
+  const saved = localStorage.getItem('fkgs_theme');
+  if (saved === 'light') {
+    document.getElementById('htmlRoot').classList.add('light');
+    const btn = document.getElementById('themeBtn');
+    if (btn) btn.textContent = '☀️';
+  }
+})();
+
+// ===== PWA =====
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show banner on mobile, button on desktop
+  if (window.innerWidth <= 600) {
+    setTimeout(() => {
+      const b = document.getElementById('pwaBanner');
+      if (b && !localStorage.getItem('pwa_dismissed')) b.classList.add('show');
+    }, 3000);
+  } else {
+    const btn = document.getElementById('pwaDesktopBtn');
+    if (btn) btn.classList.remove('hidden');
+  }
+});
+function triggerPwaInstall() {
+  if (!deferredPrompt) {
+    showToast('ℹ️ Откройте сайт в браузере Chrome или Safari для установки');
+    return;
+  }
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(r => {
+    if (r.outcome === 'accepted') showToast('✅ Добавлено на рабочий стол!');
+    deferredPrompt = null;
+    dismissPwa();
+    const btn = document.getElementById('pwaDesktopBtn');
+    if (btn) btn.classList.add('hidden');
+  });
+}
+function dismissPwa() {
+  document.getElementById('pwaBanner').classList.remove('show');
+  localStorage.setItem('pwa_dismissed', '1');
+}
+window.addEventListener('appinstalled', () => {
+  showToast('🎉 Приложение установлено!');
+  dismissPwa();
+});
+
+// ===== MOBILE TABS =====
+function mobileTab(tab) {
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('bnavDash').classList.toggle('active', tab === 'dash');
+  document.getElementById('bnavRating').classList.toggle('active', tab === 'rating');
+  // Scroll to section
+  if (tab === 'dash') window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (tab === 'rating') {
+    const el = document.querySelector('.main-grid');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+// ===== СПРАВКА =====
+function openSpravka() {
+  const { objVotes, desVotes, total } = computeStats();
+  const pct = (total / PLAN * 100).toFixed(1);
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const dateStr = `${pad(now.getDate())}.${pad(now.getMonth()+1)}.${now.getFullYear()}`;
+  const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+  document.getElementById('spravkaDate').textContent = dateStr;
+  document.getElementById('spravkaTime').textContent = timeStr;
+
+  // KPI
+  document.getElementById('sKpiTotal').textContent = total.toLocaleString('ru');
+  document.getElementById('sKpiObj').textContent = objVotes.toLocaleString('ru');
+  document.getElementById('sKpiDes').textContent = desVotes.toLocaleString('ru');
+  document.getElementById('sKpiPlan').textContent = pct + '%';
+  document.getElementById('sProgPct').textContent = pct + '%';
+  document.getElementById('sProgFill').style.width = Math.min(pct, 100) + '%';
+  document.getElementById('sProgCollected').textContent = total.toLocaleString('ru');
+
+  // Design
+  const maxD = Math.max(...designData.map(d => d.votes));
+  document.getElementById('sDesignRow').innerHTML = designData.map(d => `
+    <div class="spravka-design-item">
+      <div class="spravka-design-num">Вариант ${d.num}</div>
+      <div class="spravka-design-name">${d.name}</div>
+      <div class="spravka-design-votes">${d.votes.toLocaleString('ru')} голосов</div>
+      <div class="spravka-design-bar2"><div class="spravka-design-fill" style="width:${(d.votes/maxD*100).toFixed(1)}%"></div></div>
+    </div>
+  `).join('');
+
+  // Top 10
+  const top10 = [...data].sort((a,b)=>b.votes-a.votes).slice(0,10);
+  const maxV = top10[0]?.votes || 1;
+  const medals = ['🥇','🥈','🥉'];
+  document.getElementById('sTop10Body').innerHTML = top10.map((d,i) => `
+    <tr>
+      <td class="medal">${medals[i] || (i+1)}</td>
+      <td>№${d.num} · ${d.name}</td>
+      <td style="text-align:right" class="votes-val">${d.votes.toLocaleString('ru')}</td>
+      <td class="bar-cell spravka-no-print">
+        <div class="spravka-mini-bar"><div class="spravka-mini-fill" style="width:${(d.votes/maxV*100).toFixed(1)}%"></div></div>
+      </td>
+    </tr>
+  `).join('');
+
+  // Auto summary text
+  const leader = top10[0];
+  const outsider = [...data].sort((a,b)=>a.votes-b.votes)[0];
+  const avgVotes = Math.round(objVotes / data.length);
+  const desLeader = [...designData].sort((a,b)=>b.votes-a.votes)[0];
+  const needed = Math.max(0, PLAN - total);
+  document.getElementById('sSummaryText').innerHTML = `
+    <p>По состоянию на <span class="spravka-highlight">${dateStr} ${timeStr}</span> на платформе голосования за объекты благоустройства в рамках Федерального проекта «Формирование комфортной городской среды» зафиксировано <span class="spravka-highlight">${total.toLocaleString('ru')} голосов</span>, что составляет <span class="spravka-highlight">${pct}%</span> от установленного плана в 101 475 голосов.</p>
+    <p><strong>Голосование за объекты благоустройства</strong> — ${objVotes.toLocaleString('ru')} голосов (${data.length} объектов участвуют). Безусловным лидером является объект <span class="spravka-highlight">№${leader.num}</span> («${leader.name.substring(0,60)}…») — <span class="spravka-highlight">${leader.votes.toLocaleString('ru')} голосов</span>. Среднее число голосов на объект составляет <span class="spravka-highlight">${avgVotes.toLocaleString('ru')}</span>.</p>
+    <p><strong>Голосование за дизайн-проекты</strong> — ${desVotes.toLocaleString('ru')} голосов суммарно. Лидирует вариант ${desLeader.num}: <span class="spravka-highlight">${desLeader.votes.toLocaleString('ru')} голосов</span>.</p>
+    <p>Для выполнения плана необходимо дополнительно привлечь <span class="spravka-highlight">${needed > 0 ? needed.toLocaleString('ru') + ' голосов' : 'план выполнен ✅'}</span>. Рекомендуется усилить информационную работу с жителями по объектам с низкой активностью — наименьший результат у объекта №${outsider.num} (${outsider.votes} голосов).</p>
+  `;
+
+  document.getElementById('spravkaOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSpravka() {
+  document.getElementById('spravkaOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function printSpravka() {
+  window.print();
+}
+
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  currentSort = 'votes'; votesAsc = false;
+  render();
+});
+</script>
+<!-- SETTINGS MODAL -->
+<div class="settings-overlay" id="settingsOverlay">
+  <div class="settings-modal">
+    <div class="settings-title">⚙️ Настройки</div>
+
+    <div class="settings-section-label">Supabase — источник данных</div>
+    <input class="settings-input" id="sbUrl" placeholder="https://xxxx.supabase.co" type="url" autocomplete="off">
+    <div style="height:8px"></div>
+    <input class="settings-input" id="sbKey" placeholder="anon public key" type="password" autocomplete="off">
+
+    <div class="settings-status" id="sbStatus">
+      <span class="status-dot" id="sbDot"></span>
+      <span id="sbStatusText">Не подключено</span>
+    </div>
+
+    <button class="settings-sync-btn" id="syncBtn" onclick="syncFromSupabase()" disabled>
+      🔄 Синхронизировать данные сейчас
+    </button>
+
+    <p class="settings-info">
+      В таблице <strong>fkgs_votes</strong> должны быть колонки:<br>
+      <code>date</code> (date) · <code>num</code> (int) · <code>name</code> (text) · <code>votes</code> (int) · <code>type</code> ('object' | 'design')
+    </p>
+
+    <hr class="settings-divider">
+
+    <div class="settings-section-label">Последняя синхронизация</div>
+    <div class="settings-status">
+      <span class="status-dot" id="lastSyncDot"></span>
+      <span id="lastSyncText">—</span>
+    </div>
+
+    <div class="settings-row">
+      <button class="settings-cancel-btn" onclick="closeSettings()">Закрыть</button>
+      <button class="settings-save-btn" onclick="saveSettings()">Сохранить и подключить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== SUPABASE SETTINGS =====
+let sbConfig = { url: '', key: '' };
+
+function openSettings() {
+  sbConfig = loadSbConfig();
+  document.getElementById('sbUrl').value = sbConfig.url || '';
+  document.getElementById('sbKey').value = sbConfig.key || '';
+  updateSettingsStatus();
+  document.getElementById('settingsOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSettings() {
+  document.getElementById('settingsOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function loadSbConfig() {
+  try {
+    return JSON.parse(localStorage.getItem('fkgs_sb') || '{}');
+  } catch { return {}; }
+}
+
+function saveSbConfig(cfg) {
+  localStorage.setItem('fkgs_sb', JSON.stringify(cfg));
+}
+
+function saveSettings() {
+  const url = document.getElementById('sbUrl').value.trim().replace(/\/$/, '');
+  const key = document.getElementById('sbKey').value.trim();
+  if (!url || !key) { showToast('⚠️ Введите URL и ключ Supabase'); return; }
+  sbConfig = { url, key };
+  saveSbConfig(sbConfig);
+  testSupabaseConnection(url, key).then(ok => {
+    if (ok) {
+      showToast('✅ Подключено к Supabase');
+      document.getElementById('syncBtn').disabled = false;
+    } else {
+      showToast('❌ Не удалось подключиться — проверьте URL и ключ');
+    }
+    updateSettingsStatus();
+  });
+}
+
+async function testSupabaseConnection(url, key) {
+  try {
+    const r = await fetch(`${url}/rest/v1/fkgs_votes?select=num&limit=1`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` }
+    });
+    return r.ok;
+  } catch { return false; }
+}
+
+function updateSettingsStatus() {
+  const cfg = loadSbConfig();
+  const dot = document.getElementById('sbDot');
+  const txt = document.getElementById('sbStatusText');
+  const btn = document.getElementById('syncBtn');
+  if (cfg.url && cfg.key) {
+    dot.className = 'status-dot connected';
+    txt.textContent = `Подключено: ${cfg.url}`;
+    if (btn) btn.disabled = false;
+  } else {
+    dot.className = 'status-dot';
+    txt.textContent = 'Не подключено';
+    if (btn) btn.disabled = true;
+  }
+  const lastSync = localStorage.getItem('fkgs_last_sync');
+  const lastDot = document.getElementById('lastSyncDot');
+  const lastTxt = document.getElementById('lastSyncText');
+  if (lastSync) {
+    lastDot.className = 'status-dot connected';
+    lastTxt.textContent = lastSync;
+  } else {
+    lastDot.className = 'status-dot';
+    lastTxt.textContent = 'Синхронизация не выполнялась';
+  }
+}
+
+async function syncFromSupabase() {
+  const cfg = loadSbConfig();
+  if (!cfg.url || !cfg.key) { showToast('⚠️ Сначала настройте Supabase'); return; }
+
+  const btn = document.getElementById('syncBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Загрузка...';
+  setStatusLoading();
+
+  try {
+    // Get latest date available
+    const dateRes = await fetch(
+      `${cfg.url}/rest/v1/fkgs_votes?select=date&order=date.desc&limit=1`,
+      { headers: { apikey: cfg.key, Authorization: `Bearer ${cfg.key}` } }
+    );
+    if (!dateRes.ok) throw new Error(`HTTP ${dateRes.status}`);
+    const dateData = await dateRes.json();
+    if (!dateData.length) throw new Error('Нет данных в таблице');
+    const latestDate = dateData[0].date;
+
+    // Fetch all rows for latest date
+    const res = await fetch(
+      `${cfg.url}/rest/v1/fkgs_votes?date=eq.${latestDate}&order=num.asc`,
+      { headers: { apikey: cfg.key, Authorization: `Bearer ${cfg.key}` } }
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const rows = await res.json();
+
+    // Split into objects and design
+    const objRows = rows.filter(r => r.type === 'object');
+    const desRows = rows.filter(r => r.type === 'design');
+
+    if (objRows.length) {
+      data = objRows.map((r, i) => ({ id: 300 + i, num: r.num, name: r.name, votes: r.votes }));
+    }
+    if (desRows.length) {
+      designData = desRows.map(r => ({ num: r.num, name: r.name, votes: r.votes }));
+    }
+
+    // Format date label
+    const d = new Date(latestDate);
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const yyyy = d.getFullYear();
+    window._dataLabel = `Данные на 09:00 ${dd}.${mm}.${yyyy} · Махачкала`;
+
+    const syncTime = new Date().toLocaleString('ru', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    localStorage.setItem('fkgs_last_sync', syncTime);
+
+    selectedId = null;
+    render();
+    updateSettingsStatus();
+    showToast(`✅ Загружено из Supabase: ${objRows.length} объектов, ${desRows.length} дизайн-проекта`);
+
+  } catch(err) {
+    showToast(`❌ Ошибка: ${err.message}`);
+    document.getElementById('sbDot').className = 'status-dot error';
+    document.getElementById('sbStatusText').textContent = `Ошибка: ${err.message}`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔄 Синхронизировать данные сейчас';
+  }
+}
+
+function setStatusLoading() {
+  document.getElementById('sbDot').className = 'status-dot loading';
+  document.getElementById('sbStatusText').textContent = 'Подключение...';
+}
+
+// Close on backdrop click
+document.getElementById('settingsOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('settingsOverlay')) closeSettings();
+});
+
+// Auto-sync on load if configured
+window.addEventListener('load', () => {
+  const cfg = loadSbConfig();
+  if (cfg.url && cfg.key) {
+    syncFromSupabase();
+  }
+});
+</script>
+</body>
+</html>

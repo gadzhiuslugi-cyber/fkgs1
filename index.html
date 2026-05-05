@@ -1498,6 +1498,14 @@ if ('serviceWorker' in navigator) {
       <div class="rank-list" id="rankList"></div>
     </div>
 
+    <!-- DAILY STATS CARD -->
+    <div class="panel" id="dailyStatsPanel" style="margin-top:20px">
+      <div class="section-title">📅 Статистика по дням</div>
+      <div id="dailyStatsList" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto">
+        <div style="font-size:13px;color:var(--muted);text-align:center;padding:20px">Загрузите данные из Supabase для отображения статистики</div>
+      </div>
+    </div>
+
     <!-- RIGHT: SIDEBAR -->
     <div class="sidebar">
 
@@ -1872,84 +1880,110 @@ function exportCSV() {
   showToast('📤 CSV экспортирован');
 }
 
-// ===== IMPORT EXCEL =====
+// ===== IMPORT EXCEL → SUPABASE =====
+function importExcelToSupabase(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  closeSettings();
+  showToast('⏳ Читаем файл...');
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      const { objRows, desRows, dateStr } = parseExcelRows(e.target.result, file.name);
+      if (!objRows.length && !desRows.length) { showToast('⚠️ Не удалось распознать данные'); return; }
+
+      showToast('⏳ Загружаем в Supabase...');
+      const ok = await pushToSupabase(dateStr, objRows, desRows);
+
+      // Update local data
+      if (objRows.length) data = objRows.map((r,i) => ({ id:300+i, num:r.num, name:r.name, votes:r.votes }));
+      if (desRows.length) designData = desRows.map(r => ({ num:r.num, name:r.name, votes:r.votes }));
+      const [y,m,d2] = dateStr.split('-');
+      window._dataLabel = `Данные на 09:00 ${d2}.${m}.${y} · Махачкала`;
+
+      const syncTime = new Date().toLocaleString('ru', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      localStorage.setItem('fkgs_last_sync', syncTime);
+
+      await loadDailyStats();
+      selectedId = null; render();
+      showToast(ok ? `✅ Сохранено в Supabase: ${objRows.length} объектов · ${desRows.length} дизайн` : `✅ Данные обновлены локально (Supabase: ошибка)`);
+    } catch(err) { showToast('❌ ' + err.message); }
+    event.target.value = '';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ===== PARSE EXCEL ROWS (shared helper) =====
+function parseExcelRows(arrayBuffer, fileName) {
+  const wb = XLSX.read(arrayBuffer, { type: 'array' });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+
+  // Extract date from filename e.g. "Голосование_ФКГС_05_05.xlsx" → 2026-05-05
+  let dateStr = new Date().toISOString().slice(0,10);
+  const fnMatch = (fileName||'').match(/(\d{2})_(\d{2})(?:_(\d{4}))?/);
+  if (fnMatch) {
+    const day = fnMatch[1], mon = fnMatch[2], yr = fnMatch[3] || '2026';
+    dateStr = `${yr}-${mon}-${day}`;
+  }
+  // Also try to extract from cell content
+  for (let i = 0; i < Math.min(5, rows.length); i++) {
+    const cell = String(rows[i][0] || '');
+    const m = cell.match(/на\s+\d+:\d+\s+(\d{2})\.(\d{2})\.(\d{4})/i);
+    if (m) { dateStr = `${m[3]}-${m[2]}-${m[1]}`; break; }
+  }
+  // Also set _dataLabel from cell
+  for (let i = 0; i < Math.min(5, rows.length); i++) {
+    const cell = String(rows[i][0] || '');
+    const m = cell.match(/итого голосов на\s+(.+?):/i);
+    if (m) { window._dataLabel = `Данные на ${m[1].trim()} · Махачкала`; break; }
+  }
+
+  // Find header rows
+  const headerIdxs = [];
+  for (let i = 0; i < rows.length; i++) {
+    if (String(rows[i][0]).trim() === '№') headerIdxs.push(i);
+  }
+
+  const objRows = [];
+  if (headerIdxs.length >= 1) {
+    const start = headerIdxs[0] + 1;
+    const end = headerIdxs.length >= 2 ? headerIdxs[1] : rows.length;
+    for (let i = start; i < end; i++) {
+      const r = rows[i];
+      const num = parseInt(r[0]); const name = String(r[1]||'').trim(); const votes = parseInt(r[2]);
+      if (!isNaN(num) && num > 0 && name && !isNaN(votes)) objRows.push({ num, name, votes });
+    }
+  }
+
+  const desRows = [];
+  if (headerIdxs.length >= 2) {
+    for (let i = headerIdxs[1] + 1; i < rows.length; i++) {
+      const r = rows[i];
+      const num = parseInt(r[0]); const name = String(r[1]||'').trim().replace(/^Вариант\s+дизайна\s*/i,''); const votes = parseInt(r[2]);
+      if (!isNaN(num) && num > 0 && name && !isNaN(votes)) desRows.push({ num, name, votes });
+    }
+  }
+
+  return { objRows, desRows, dateStr };
+}
+// ===== IMPORT EXCEL (кнопка в панели действий — только локально) =====
 function importExcel(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
-      const wb = XLSX.read(e.target.result, { type: 'array' });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-
-      // Попытаться извлечь дату/время из строки «Итого голосов на ...»
-      for (let i = 0; i < Math.min(5, rows.length); i++) {
-        const cell = String(rows[i][0] || '');
-        const m = cell.match(/итого голосов на\s+(.+?):/i);
-        if (m) { window._dataLabel = `Данные на ${m[1].trim()} · Махачкала`; break; }
-      }
-
-      // Найти ВСЕ строки-заголовки с «№» (их может быть две: объекты + дизайн)
-      const headerIdxs = [];
-      for (let i = 0; i < rows.length; i++) {
-        if (String(rows[i][0]).trim() === '№') headerIdxs.push(i);
-      }
-
-      // ---- Секция 1: объекты благоустройства (первый заголовок №) ----
-      let importedObj = [];
-      if (headerIdxs.length >= 1) {
-        const start = headerIdxs[0] + 1;
-        const end   = headerIdxs.length >= 2 ? headerIdxs[1] : rows.length;
-        for (let i = start; i < end; i++) {
-          const r = rows[i];
-          const num   = parseInt(r[0]);
-          const name  = String(r[1] || '').trim();
-          const votes = parseInt(r[2]);
-          if (!isNaN(num) && num > 0 && name && !isNaN(votes)) {
-            importedObj.push({ id: nextId++, num, name, votes });
-          }
-        }
-        // Полностью заменяем список объектов данными из файла
-        if (importedObj.length > 0) {
-          data = importedObj;
-        }
-      }
-
-      // ---- Секция 2: дизайн-проекты (второй заголовок №) ----
-      let importedDes = [];
-      if (headerIdxs.length >= 2) {
-        const start = headerIdxs[1] + 1;
-        for (let i = start; i < rows.length; i++) {
-          const r = rows[i];
-          const num   = parseInt(r[0]);
-          // Убираем префикс «Вариант дизайна» если есть
-          const name  = String(r[1] || '').trim().replace(/^Вариант\s+дизайна\s*/i, '');
-          const votes = parseInt(r[2]);
-          if (!isNaN(num) && num > 0 && name && !isNaN(votes)) {
-            importedDes.push({ num, name, votes });
-          }
-        }
-        // Полностью заменяем дизайн-данные
-        if (importedDes.length > 0) {
-          designData = importedDes;
-        }
-      }
-
-      if (importedObj.length === 0 && importedDes.length === 0) {
-        showToast('⚠️ Не удалось распознать данные в файле'); return;
-      }
-
-      selectedId = null;
-      render();
-
+      const { objRows, desRows } = parseExcelRows(e.target.result, file.name);
+      if (!objRows.length && !desRows.length) { showToast('⚠️ Не удалось распознать данные'); return; }
+      if (objRows.length) data = objRows.map((r,i) => ({ id:nextId++, num:r.num, name:r.name, votes:r.votes }));
+      if (desRows.length) designData = desRows.map(r => ({ num:r.num, name:r.name, votes:r.votes }));
+      selectedId = null; render();
       const parts = [];
-      if (importedObj.length) parts.push(`${importedObj.length} объектов`);
-      if (importedDes.length) parts.push(`${importedDes.length} дизайн-варианта`);
+      if (objRows.length) parts.push(`${objRows.length} объектов`);
+      if (desRows.length) parts.push(`${desRows.length} дизайн-варианта`);
       showToast(`✅ Загружено: ${parts.join(' + ')}`);
-    } catch(err) {
-      showToast('❌ Ошибка чтения файла: ' + err.message);
-    }
+    } catch(err) { showToast('❌ ' + err.message); }
     event.target.value = '';
   };
   reader.readAsArrayBuffer(file);
@@ -2186,189 +2220,283 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- SETTINGS MODAL -->
 <div class="settings-overlay" id="settingsOverlay">
   <div class="settings-modal">
-    <div class="settings-title">⚙️ Настройки</div>
+    <div class="settings-title">⚙️ Настройки · Supabase</div>
 
-    <div class="settings-section-label">Supabase — источник данных</div>
-    <input class="settings-input" id="sbUrl" placeholder="https://xxxx.supabase.co" type="url" autocomplete="off">
-    <div style="height:8px"></div>
-    <input class="settings-input" id="sbKey" placeholder="anon public key" type="password" autocomplete="off">
-
+    <div class="settings-section-label">Подключение</div>
     <div class="settings-status" id="sbStatus">
-      <span class="status-dot" id="sbDot"></span>
-      <span id="sbStatusText">Не подключено</span>
+      <span class="status-dot connected" id="sbDot"></span>
+      <span id="sbStatusText">Подключено</span>
     </div>
-
-    <button class="settings-sync-btn" id="syncBtn" onclick="syncFromSupabase()" disabled>
-      🔄 Синхронизировать данные сейчас
-    </button>
-
-    <p class="settings-info">
-      В таблице <strong>fkgs_votes</strong> должны быть колонки:<br>
-      <code>date</code> (date) · <code>num</code> (int) · <code>name</code> (text) · <code>votes</code> (int) · <code>type</code> ('object' | 'design')
-    </p>
+    <div class="settings-info" style="margin-top:8px">
+      <strong>URL:</strong> https://fneflxbnwwvxlxmsumvy.supabase.co<br>
+      <strong>Таблица:</strong> fkgs_votes
+    </div>
 
     <hr class="settings-divider">
 
-    <div class="settings-section-label">Последняя синхронизация</div>
-    <div class="settings-status">
+    <div class="settings-section-label">Загрузить новый Excel в базу</div>
+    <label class="settings-sync-btn" style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer">
+      📥 Выбрать Excel-файл (.xlsx)
+      <input type="file" accept=".xlsx" onchange="importExcelToSupabase(event)" style="display:none">
+    </label>
+    <div class="settings-info">
+      Excel загружается в Supabase и сразу обновляет дашборд.<br>
+      Структура: № · Наименование · Голосов (два блока — объекты и дизайн).
+    </div>
+
+    <hr class="settings-divider">
+
+    <div class="settings-section-label">Синхронизация с базой</div>
+    <button class="settings-sync-btn" id="syncBtn" onclick="syncFromSupabase()">
+      🔄 Синхронизировать данные сейчас
+    </button>
+    <div class="settings-status" style="margin-top:10px">
       <span class="status-dot" id="lastSyncDot"></span>
       <span id="lastSyncText">—</span>
     </div>
 
     <div class="settings-row">
       <button class="settings-cancel-btn" onclick="closeSettings()">Закрыть</button>
-      <button class="settings-save-btn" onclick="saveSettings()">Сохранить и подключить</button>
     </div>
   </div>
 </div>
 
 <script>
-// ===== SUPABASE SETTINGS =====
-let sbConfig = { url: '', key: '' };
+// ===== SUPABASE CONFIG (захардкожено) =====
+const SB_URL = 'https://fneflxbnwwvxlxmsumvy.supabase.co';
+const SB_KEY = 'sb_publishable_nmp3wCVtNFmouGJYG3nMlw_CpL90iOp';
 
+function sbHeaders() {
+  return { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+}
+
+// ===== SETTINGS MODAL =====
 function openSettings() {
-  sbConfig = loadSbConfig();
-  document.getElementById('sbUrl').value = sbConfig.url || '';
-  document.getElementById('sbKey').value = sbConfig.key || '';
   updateSettingsStatus();
   document.getElementById('settingsOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
-
 function closeSettings() {
   document.getElementById('settingsOverlay').classList.remove('open');
   document.body.style.overflow = '';
 }
 
-function loadSbConfig() {
-  try {
-    return JSON.parse(localStorage.getItem('fkgs_sb') || '{}');
-  } catch { return {}; }
-}
-
-function saveSbConfig(cfg) {
-  localStorage.setItem('fkgs_sb', JSON.stringify(cfg));
-}
-
-function saveSettings() {
-  const url = document.getElementById('sbUrl').value.trim().replace(/\/$/, '');
-  const key = document.getElementById('sbKey').value.trim();
-  if (!url || !key) { showToast('⚠️ Введите URL и ключ Supabase'); return; }
-  sbConfig = { url, key };
-  saveSbConfig(sbConfig);
-  testSupabaseConnection(url, key).then(ok => {
-    if (ok) {
-      showToast('✅ Подключено к Supabase');
-      document.getElementById('syncBtn').disabled = false;
-    } else {
-      showToast('❌ Не удалось подключиться — проверьте URL и ключ');
-    }
-    updateSettingsStatus();
-  });
-}
-
-async function testSupabaseConnection(url, key) {
-  try {
-    const r = await fetch(`${url}/rest/v1/fkgs_votes?select=num&limit=1`, {
-      headers: { apikey: key, Authorization: `Bearer ${key}` }
-    });
-    return r.ok;
-  } catch { return false; }
-}
-
 function updateSettingsStatus() {
-  const cfg = loadSbConfig();
   const dot = document.getElementById('sbDot');
   const txt = document.getElementById('sbStatusText');
-  const btn = document.getElementById('syncBtn');
-  if (cfg.url && cfg.key) {
-    dot.className = 'status-dot connected';
-    txt.textContent = `Подключено: ${cfg.url}`;
-    if (btn) btn.disabled = false;
-  } else {
-    dot.className = 'status-dot';
-    txt.textContent = 'Не подключено';
-    if (btn) btn.disabled = true;
-  }
+  if (dot) { dot.className = 'status-dot connected'; }
+  if (txt) { txt.textContent = SB_URL; }
+  document.getElementById('syncBtn').disabled = false;
   const lastSync = localStorage.getItem('fkgs_last_sync');
   const lastDot = document.getElementById('lastSyncDot');
   const lastTxt = document.getElementById('lastSyncText');
-  if (lastSync) {
-    lastDot.className = 'status-dot connected';
-    lastTxt.textContent = lastSync;
-  } else {
-    lastDot.className = 'status-dot';
-    lastTxt.textContent = 'Синхронизация не выполнялась';
-  }
+  if (lastSync) { lastDot.className = 'status-dot connected'; lastTxt.textContent = lastSync; }
+  else { lastDot.className = 'status-dot'; lastTxt.textContent = 'Синхронизация не выполнялась'; }
 }
 
-async function syncFromSupabase() {
-  const cfg = loadSbConfig();
-  if (!cfg.url || !cfg.key) { showToast('⚠️ Сначала настройте Supabase'); return; }
+// ===== ENSURE TABLE EXISTS =====
+async function ensureTable() {
+  // Try to create table via RPC if it doesn't exist
+  // First check if table exists by doing a HEAD request
+  const check = await fetch(`${SB_URL}/rest/v1/fkgs_votes?limit=0`, {
+    headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` }
+  });
+  if (check.ok || check.status === 406) return true; // table exists
 
+  // Table not found — create via SQL RPC
+  const createSQL = `
+    CREATE TABLE IF NOT EXISTS public.fkgs_votes (
+      id bigserial PRIMARY KEY,
+      date date NOT NULL,
+      num integer NOT NULL,
+      name text NOT NULL,
+      votes integer NOT NULL DEFAULT 0,
+      type text NOT NULL CHECK (type IN ('object','design')),
+      created_at timestamptz DEFAULT now()
+    );
+    CREATE INDEX IF NOT EXISTS fkgs_votes_date_idx ON public.fkgs_votes(date);
+    ALTER TABLE public.fkgs_votes ENABLE ROW LEVEL SECURITY;
+    CREATE POLICY IF NOT EXISTS "allow_all" ON public.fkgs_votes FOR ALL USING (true) WITH CHECK (true);
+  `;
+  const rpc = await fetch(`${SB_URL}/rest/v1/rpc/exec_sql`, {
+    method: 'POST',
+    headers: { ...sbHeaders() },
+    body: JSON.stringify({ sql: createSQL })
+  });
+  return rpc.ok;
+}
+
+// ===== UPLOAD EXCEL TO SUPABASE =====
+// Called from importExcel after parsing — we also push to Supabase
+async function pushToSupabase(dateStr, objRows, desRows) {
+  await ensureTable();
+
+  // Delete existing rows for this date (upsert by date)
+  await fetch(`${SB_URL}/rest/v1/fkgs_votes?date=eq.${dateStr}`, {
+    method: 'DELETE',
+    headers: sbHeaders()
+  });
+
+  const rows = [
+    ...objRows.map(r => ({ date: dateStr, num: r.num, name: r.name, votes: r.votes, type: 'object' })),
+    ...desRows.map(r => ({ date: dateStr, num: r.num, name: r.name, votes: r.votes, type: 'design' }))
+  ];
+
+  if (!rows.length) return;
+
+  const res = await fetch(`${SB_URL}/rest/v1/fkgs_votes`, {
+    method: 'POST',
+    headers: { ...sbHeaders(), 'Prefer': 'resolution=merge-duplicates' },
+    body: JSON.stringify(rows)
+  });
+  return res.ok;
+}
+
+// ===== SYNC FROM SUPABASE =====
+async function syncFromSupabase() {
   const btn = document.getElementById('syncBtn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Загрузка...';
-  setStatusLoading();
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Загрузка...'; }
+  const dot = document.getElementById('sbDot');
+  const txt = document.getElementById('sbStatusText');
+  if (dot) dot.className = 'status-dot loading';
+  if (txt) txt.textContent = 'Синхронизация...';
 
   try {
-    // Get latest date available
+    // Get latest date
     const dateRes = await fetch(
-      `${cfg.url}/rest/v1/fkgs_votes?select=date&order=date.desc&limit=1`,
-      { headers: { apikey: cfg.key, Authorization: `Bearer ${cfg.key}` } }
+      `${SB_URL}/rest/v1/fkgs_votes?select=date&order=date.desc&limit=1`,
+      { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
     );
     if (!dateRes.ok) throw new Error(`HTTP ${dateRes.status}`);
     const dateData = await dateRes.json();
-    if (!dateData.length) throw new Error('Нет данных в таблице');
+    if (!dateData.length) throw new Error('Таблица пуста — загрузите Excel-файл');
     const latestDate = dateData[0].date;
 
-    // Fetch all rows for latest date
+    // Fetch latest day data
     const res = await fetch(
-      `${cfg.url}/rest/v1/fkgs_votes?date=eq.${latestDate}&order=num.asc`,
-      { headers: { apikey: cfg.key, Authorization: `Bearer ${cfg.key}` } }
+      `${SB_URL}/rest/v1/fkgs_votes?date=eq.${latestDate}&order=num.asc`,
+      { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const rows = await res.json();
 
-    // Split into objects and design
     const objRows = rows.filter(r => r.type === 'object');
     const desRows = rows.filter(r => r.type === 'design');
+    if (objRows.length) data = objRows.map((r,i) => ({ id: 300+i, num: r.num, name: r.name, votes: r.votes }));
+    if (desRows.length) designData = desRows.map(r => ({ num: r.num, name: r.name, votes: r.votes }));
 
-    if (objRows.length) {
-      data = objRows.map((r, i) => ({ id: 300 + i, num: r.num, name: r.name, votes: r.votes }));
-    }
-    if (desRows.length) {
-      designData = desRows.map(r => ({ num: r.num, name: r.name, votes: r.votes }));
-    }
-
-    // Format date label
-    const d = new Date(latestDate);
+    const d = new Date(latestDate + 'T00:00:00');
     const dd = String(d.getDate()).padStart(2,'0');
-    const mm = String(d.getMonth()+1).padStart(2,'0');
-    const yyyy = d.getFullYear();
-    window._dataLabel = `Данные на 09:00 ${dd}.${mm}.${yyyy} · Махачкала`;
+    const mm2 = String(d.getMonth()+1).padStart(2,'0');
+    window._dataLabel = `Данные на 09:00 ${dd}.${mm2}.${d.getFullYear()} · Махачкала`;
 
     const syncTime = new Date().toLocaleString('ru', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
     localStorage.setItem('fkgs_last_sync', syncTime);
 
-    selectedId = null;
-    render();
-    updateSettingsStatus();
-    showToast(`✅ Загружено из Supabase: ${objRows.length} объектов, ${desRows.length} дизайн-проекта`);
+    // Load daily stats
+    await loadDailyStats();
 
+    selectedId = null; render(); updateSettingsStatus();
+    showToast(`✅ Supabase: ${objRows.length} объектов · ${desRows.length} дизайн`);
   } catch(err) {
-    showToast(`❌ Ошибка: ${err.message}`);
-    document.getElementById('sbDot').className = 'status-dot error';
-    document.getElementById('sbStatusText').textContent = `Ошибка: ${err.message}`;
+    showToast(`❌ ${err.message}`);
+    if (dot) dot.className = 'status-dot error';
+    if (txt) txt.textContent = `Ошибка: ${err.message}`;
   } finally {
-    btn.disabled = false;
-    btn.textContent = '🔄 Синхронизировать данные сейчас';
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 Синхронизировать данные сейчас'; }
   }
 }
 
-function setStatusLoading() {
-  document.getElementById('sbDot').className = 'status-dot loading';
-  document.getElementById('sbStatusText').textContent = 'Подключение...';
+// ===== DAILY STATS =====
+async function loadDailyStats() {
+  try {
+    // Fetch totals per day (sum of all votes per date)
+    const res = await fetch(
+      `${SB_URL}/rest/v1/fkgs_votes?select=date,votes&order=date.asc`,
+      { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
+    );
+    if (!res.ok) return;
+    const rows = await res.json();
+
+    // Group by date → sum
+    const byDate = {};
+    rows.forEach(r => {
+      byDate[r.date] = (byDate[r.date] || 0) + r.votes;
+    });
+
+    const dates = Object.keys(byDate).sort();
+    if (dates.length === 0) return;
+
+    // Compute daily deltas
+    const stats = dates.map((date, i) => {
+      const total = byDate[date];
+      const prev = i > 0 ? byDate[dates[i-1]] : null;
+      const delta = prev !== null ? total - prev : null;
+      return { date, total, delta };
+    });
+
+    renderDailyStats(stats);
+  } catch(e) { console.warn('Daily stats error:', e); }
+}
+
+function renderDailyStats(stats) {
+  const el = document.getElementById('dailyStatsList');
+  if (!el) return;
+  const maxDelta = Math.max(...stats.map(s => s.delta || 0), 1);
+
+  el.innerHTML = [...stats].reverse().map((s, i) => {
+    const d = new Date(s.date + 'T00:00:00');
+    const label = `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+    const isLatest = i === 0;
+    const barW = s.delta ? (s.delta / maxDelta * 100).toFixed(1) : 0;
+    const deltaColor = s.delta > 0 ? 'var(--accent)' : 'var(--muted)';
+
+    return `
+      <div style="display:grid;grid-template-columns:90px 1fr 90px;gap:10px;align-items:center;padding:10px 12px;border-radius:8px;background:var(--panel2);border:1px solid ${isLatest ? 'rgba(0,201,167,0.3)' : 'transparent'}">
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--text)">${label}</div>
+          <div style="font-size:10px;color:var(--muted)">Итого: ${s.total.toLocaleString('ru')}</div>
+        </div>
+        <div>
+          ${s.delta !== null ? `
+            <div style="font-size:10px;color:var(--muted);margin-bottom:3px">+${s.delta.toLocaleString('ru')} голосов за день</div>
+            <div style="height:5px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden">
+              <div style="height:100%;width:${barW}%;background:linear-gradient(90deg,${deltaColor},var(--accent2));border-radius:99px"></div>
+            </div>
+          ` : `<div style="font-size:11px;color:var(--muted)">Первый день голосования</div>`}
+        </div>
+        <div style="text-align:right">
+          ${s.delta !== null
+            ? `<div style="font-family:'Russo One',sans-serif;font-size:16px;color:${deltaColor}">+${s.delta.toLocaleString('ru')}</div>`
+            : `<div style="font-size:12px;color:var(--muted)">—</div>`
+          }
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ===== SETTINGS SAVE (now just tests connection) =====
+function saveSettings() {
+  testConnection().then(ok => {
+    if (ok) {
+      showToast('✅ Подключено к Supabase');
+      updateSettingsStatus();
+    } else {
+      showToast('❌ Ошибка подключения');
+      document.getElementById('sbDot').className = 'status-dot error';
+      document.getElementById('sbStatusText').textContent = 'Ошибка подключения';
+    }
+  });
+}
+
+async function testConnection() {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/fkgs_votes?select=num&limit=1`, {
+      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` }
+    });
+    return r.ok || r.status === 406;
+  } catch { return false; }
 }
 
 // Close on backdrop click
@@ -2376,13 +2504,8 @@ document.getElementById('settingsOverlay').addEventListener('click', e => {
   if (e.target === document.getElementById('settingsOverlay')) closeSettings();
 });
 
-// Auto-sync on load if configured
-window.addEventListener('load', () => {
-  const cfg = loadSbConfig();
-  if (cfg.url && cfg.key) {
-    syncFromSupabase();
-  }
-});
+// Auto-sync on load
+window.addEventListener('load', () => { syncFromSupabase(); });
 </script>
 </body>
 </html>
